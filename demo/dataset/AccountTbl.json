@@ -1,0 +1,44 @@
+{
+	"name": "AccountTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "AccountId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CustomerId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ChannelId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AccountTypeId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "UnitPrice",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			}
+		],
+		"typeProperties": {
+			"schema": "Stage",
+			"table": "Account"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

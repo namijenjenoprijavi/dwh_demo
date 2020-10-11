@@ -1,0 +1,55 @@
+{
+	"name": "LoadFactTraffic",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "TrafficTbl",
+						"type": "DatasetReference"
+					},
+					"name": "TraficTbl"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimAccountTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimAccountSrc"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimDateTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimDateSrc"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "FactTrafficTbl",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Lookup1"
+				},
+				{
+					"name": "Lookup2"
+				},
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "DerivedColumn2"
+				}
+			],
+			"script": "source(output(\n\t\tSendDate as timestamp,\n\t\tAccountId as integer,\n\t\tClientInteraction as decimal(18,2),\n\t\tRevenue as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> TraficTbl\nsource(output(\n\t\tAccountDWId as integer,\n\t\tAccountId as integer,\n\t\tChannelDWId as integer,\n\t\tAccountTypeDWId as integer,\n\t\tCustomerDWId as integer,\n\t\tUnitPrice as decimal(18,2),\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimAccountSrc\nsource(output(\n\t\tDateDwId as integer,\n\t\tFullDate as timestamp,\n\t\tDayOfWeek as long,\n\t\tDayNumInMonth as long,\n\t\tDayNumOverall as long,\n\t\tDayName as string,\n\t\tDayAbrevv as string,\n\t\tWeekdayFlag as string,\n\t\tWeekNumInYear as long,\n\t\tWeekNumOverall as long,\n\t\tWeekBeginDate as timestamp,\n\t\tWeekBeginDateKey as long,\n\t\tMonth as long,\n\t\tMonthNumOverall as short,\n\t\tMonthName as string,\n\t\tMonthAbrevv as string,\n\t\tQuarter as byte,\n\t\tYear as long,\n\t\tYearMonth as integer,\n\t\tFiscalMonth as byte,\n\t\tFiscalQuarter as byte,\n\t\tFiscalYear as long,\n\t\tLastDayInMonthFlag as string,\n\t\tSameDayYearAgoDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimDateSrc\nTraficTbl, DimAccountSrc lookup(TraficTbl@AccountId == DimAccountSrc@AccountId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup1\nLookup1, DimDateSrc lookup(toDate(SendDate) == toDate(FullDate),\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup2\nLookup2 derive(RecordCreatedDate = currentUTC(),\n\t\tRecordLastUpdatedDate = currentUTC()) ~> DerivedColumn1\nDerivedColumn1 derive(AccountDWId = iif(isNull(AccountDWId),-1,AccountDWId),\n\t\tDateDwId = iif(isNull(DateDwId), -1, toInteger(DateDwId))) ~> DerivedColumn2\nDerivedColumn2 sink(input(\n\t\tAccountDWId as integer,\n\t\tDateDwId as integer,\n\t\tRavenue as decimal(18,2),\n\t\tInteractionNo as long,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tpreSQLs:['truncate table [Model].[FactTraffic]'],\n\tmapColumn(\n\t\tAccountDWId,\n\t\tDateDwId,\n\t\tRavenue = Revenue,\n\t\tInteractionNo = ClientInteraction,\n\t\tRecordCreatedDate,\n\t\tRecordLastUpdatedDate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+		}
+	}
+}

@@ -1,0 +1,46 @@
+{
+	"name": "StockData",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "StockVolume",
+				"type": "varchar"
+			},
+			{
+				"name": "StockHigh",
+				"type": "varchar"
+			},
+			{
+				"name": "StockLow",
+				"type": "varchar"
+			},
+			{
+				"name": "StockClose",
+				"type": "varchar"
+			},
+			{
+				"name": "StockSymbol",
+				"type": "varchar"
+			},
+			{
+				"name": "StockExchange",
+				"type": "varchar"
+			},
+			{
+				"name": "StockDate",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Stage",
+			"table": "stock_dta"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

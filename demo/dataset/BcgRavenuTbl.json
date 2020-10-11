@@ -1,0 +1,51 @@
+{
+	"name": "BcgRavenuTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "CustomerDWId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "RAVENUE_LAST_MONTH",
+				"type": "decimal",
+				"precision": 38,
+				"scale": 2
+			},
+			{
+				"name": "RAVENUE_LAST_QUARTER",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "RAVENUE_MTD",
+				"type": "decimal",
+				"precision": 38,
+				"scale": 2
+			},
+			{
+				"name": "RAVENUE_YTD",
+				"type": "decimal",
+				"precision": 38,
+				"scale": 2
+			},
+			{
+				"name": "RAVENUE_INCREASE_PCT_QnQ",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "BcgRavenue"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

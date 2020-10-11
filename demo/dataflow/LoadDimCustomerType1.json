@@ -1,0 +1,83 @@
+{
+	"name": "LoadDimCustomerType1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "CustomerTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimCustomerSrc"
+				},
+				{
+					"dataset": {
+						"referenceName": "CustomerTbl",
+						"type": "DatasetReference"
+					},
+					"name": "ExistingRecords"
+				},
+				{
+					"dataset": {
+						"referenceName": "CustomerTbl",
+						"type": "DatasetReference"
+					},
+					"name": "MaxCustomerDWId"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DimCustomerTbl",
+						"type": "DatasetReference"
+					},
+					"name": "InsertSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimCustomerTbl",
+						"type": "DatasetReference"
+					},
+					"name": "UpdateSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExistingRecordsz"
+				},
+				{
+					"name": "SourceHash"
+				},
+				{
+					"name": "Exists"
+				},
+				{
+					"name": "Lookup"
+				},
+				{
+					"name": "ConditionalSplit"
+				},
+				{
+					"name": "JoinMax"
+				},
+				{
+					"name": "SurrogateKey"
+				},
+				{
+					"name": "InsertDerivedColumn"
+				},
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "UpdateDerived"
+				},
+				{
+					"name": "UpdateAlterRow"
+				}
+			],
+			"script": "source(output(\n\t\tCustomerId as integer,\n\t\tCompanyName as string,\n\t\tIndustry as string,\n\t\tSegment as string,\n\t\tAdress as string,\n\t\tCity as string,\n\t\tLong as decimal(18,2),\n\t\tLat as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimCustomerSrc\nsource(output(\n\t\tCustomerDWId as integer,\n\t\tCustomerId as integer,\n\t\tDWRecordHash as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'select CustomerDWId, CustomerId, DWRecordHash from  Model.DimCustomer',\n\tformat: 'query') ~> ExistingRecords\nsource(output(\n\t\tMaxCustomerDWId as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'SELECT MaxCustomerDWId = isnull(max(CustomerDWId),0) \\nFROM Model.DimCustomer',\n\tformat: 'query') ~> MaxCustomerDWId\nExistingRecords select(mapColumn(\n\t\tExistingCustomerDWId = CustomerDWId,\n\t\tExistingCustomerId = CustomerId,\n\t\tExistingDWRecordHash = DWRecordHash\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ExistingRecordsz\nDimCustomerSrc derive(SourceRecordHash = sha2(256, CustomerId, CompanyName, Industry, Segment, Adress, City, Long, Lat )) ~> SourceHash\nSourceHash, ExistingRecordsz exists(SourceRecordHash == ExistingDWRecordHash,\n\tnegate:true,\n\tbroadcast: 'auto')~> Exists\nExists, ExistingRecordsz lookup(CustomerId == ExistingCustomerId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup\nLookup split(isNull(ExistingCustomerId),\n\tdisjoint: false) ~> ConditionalSplit@(NewItems, UpdatedItem)\nConditionalSplit@NewItems, MaxCustomerDWId join(1==1,\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> JoinMax\nJoinMax keyGenerate(output(NewCutomerDWId as long),\n\tstartAt: 1L) ~> SurrogateKey\nSurrogateKey derive(NewCustomerDWId = NewCutomerDWId + MaxCustomerDWId,\n\t\tDWIsCurrent = toBoolean('1'),\n\t\tDwEfectivStartDate = toDate('2018-01-01'),\n\t\tDwEfectivEndDate = toDate('2999-12-31'),\n\t\tRecordCreatedDate = currentUTC(),\n\t\tRecordLastUpdatedDate = currentUTC()) ~> InsertDerivedColumn\nInsertDerivedColumn alterRow(insertIf(1==1)) ~> AlterRow\nConditionalSplit@UpdatedItem derive(RecordLastUpdatedDate = currentUTC()) ~> UpdateDerived\nUpdateDerived alterRow(updateIf(1==1)) ~> UpdateAlterRow\nAlterRow sink(input(\n\t\tCustomerDWId as integer,\n\t\tCustomerId as integer,\n\t\tCompanyName as string,\n\t\tIndustry as string,\n\t\tSegment as string,\n\t\tAdress as string,\n\t\tCity as string,\n\t\tLong as decimal(18,2),\n\t\tLat as decimal(18,2),\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tCustomerDWId = NewCutomerDWId,\n\t\tCustomerId,\n\t\tCompanyName,\n\t\tIndustry,\n\t\tSegment,\n\t\tAdress,\n\t\tCity,\n\t\tLong,\n\t\tLat,\n\t\tDWRecordHash = SourceRecordHash,\n\t\tDwEfectivStartDate,\n\t\tDwEfectivEndDate,\n\t\tDwIsCurrentFlag = DWIsCurrent,\n\t\tRecordCreatedDate,\n\t\tRecordLastUpdatedDate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> InsertSink\nUpdateAlterRow sink(input(\n\t\tCustomerDWId as integer,\n\t\tCustomerId as integer,\n\t\tCompanyName as string,\n\t\tIndustry as string,\n\t\tSegment as string,\n\t\tAdress as string,\n\t\tCity as string,\n\t\tLong as decimal(18,2),\n\t\tLat as decimal(18,2),\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['CustomerDWId'],\n\tformat: 'table',\n\tmapColumn(\n\t\tCustomerDWId = ExistingCustomerDWId,\n\t\tCustomerId,\n\t\tCompanyName,\n\t\tIndustry,\n\t\tSegment,\n\t\tAdress,\n\t\tCity,\n\t\tLong,\n\t\tLat,\n\t\tDWRecordHash = SourceRecordHash,\n\t\tRecordLastUpdatedDate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> UpdateSink"
+		}
+	}
+}

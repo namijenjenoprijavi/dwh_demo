@@ -1,0 +1,83 @@
+{
+	"name": "LoadDimAccountType",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AccountTypeTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimCustomerSrc"
+				},
+				{
+					"dataset": {
+						"referenceName": "AccountTypeTbl",
+						"type": "DatasetReference"
+					},
+					"name": "ExistingRecords"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimAccountTypeTbl",
+						"type": "DatasetReference"
+					},
+					"name": "MaxAccountTypeDWId"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DimAccountTypeTbl",
+						"type": "DatasetReference"
+					},
+					"name": "InsertSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimAccountTypeTbl",
+						"type": "DatasetReference"
+					},
+					"name": "UpdateSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExistingRecordsz"
+				},
+				{
+					"name": "SourceHash"
+				},
+				{
+					"name": "Exists"
+				},
+				{
+					"name": "Lookup"
+				},
+				{
+					"name": "ConditionalSplit"
+				},
+				{
+					"name": "JoinMax"
+				},
+				{
+					"name": "SurrogateKey"
+				},
+				{
+					"name": "InsertDerivedColumn"
+				},
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "UpdateDerived"
+				},
+				{
+					"name": "UpdateAlterRow"
+				}
+			],
+			"script": "source(output(\n\t\tAccountTypeId as integer,\n\t\tAccountType as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimCustomerSrc\nsource(output(\n\t\tAccountTypeDWId as integer,\n\t\tAccountTypeId as integer,\n\t\tDWRecordHash as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'select AccountTypeDWId, AccountTypeId, DWRecordHash from  Model.DimAccountType',\n\tformat: 'query') ~> ExistingRecords\nsource(output(\n\t\tMaxAccountTypeDWId as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'SELECT MaxAccountTypeDWId = isnull(max(AccounttypeDWId),0) \\nFROM Model.DimAccountType',\n\tformat: 'query') ~> MaxAccountTypeDWId\nExistingRecords select(mapColumn(\n\t\tExistingAccountTypeDWId = AccountTypeDWId,\n\t\tExistingAccountTypeId = AccountTypeId,\n\t\tExistingDWRecordHash = DWRecordHash\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ExistingRecordsz\nDimCustomerSrc derive(SourceRecordHash = sha2(256, AccountTypeId, AccountType)) ~> SourceHash\nSourceHash, ExistingRecordsz exists(SourceRecordHash == ExistingDWRecordHash,\n\tnegate:true,\n\tbroadcast: 'auto')~> Exists\nExists, ExistingRecordsz lookup(AccountTypeId == ExistingAccountTypeId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup\nLookup split(isNull(ExistingAccountTypeId),\n\tdisjoint: false) ~> ConditionalSplit@(NewItems, UpdatedItem)\nConditionalSplit@NewItems, MaxAccountTypeDWId join(1==1,\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> JoinMax\nJoinMax keyGenerate(output(NewAccountTypeDWId as long),\n\tstartAt: 1L) ~> SurrogateKey\nSurrogateKey derive(NewAccountTypeDWId = NewAccountTypeDWId + MaxAccountTypeDWId,\n\t\tDWIsCurrent = toBoolean('1'),\n\t\tDwEfectivStartDate = currentUTC(),\n\t\tDwEfectivEndDate = toDate('2999-12-31'),\n\t\tRecordCreatedDate = currentUTC(),\n\t\tRecordLastUpdatedDate = currentUTC()) ~> InsertDerivedColumn\nInsertDerivedColumn alterRow(insertIf(1==1)) ~> AlterRow\nConditionalSplit@UpdatedItem derive(RecordLastUpdatedDate = currentUTC()) ~> UpdateDerived\nUpdateDerived alterRow(updateIf(1==1)) ~> UpdateAlterRow\nAlterRow sink(input(\n\t\tAccountTypeDWId as integer,\n\t\tAccountTypeId as integer,\n\t\tAccountType as string,\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tAccountTypeDWId = NewAccountTypeDWId,\n\t\tAccountTypeId,\n\t\tAccountType,\n\t\tDWRecordHash = SourceRecordHash,\n\t\tDwEfectivStartDate,\n\t\tDwEfectivEndDate,\n\t\tDwIsCurrentFlag = DWIsCurrent,\n\t\tRecordCreatedDate,\n\t\tRecordLastUpdatedDate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> InsertSink\nUpdateAlterRow sink(input(\n\t\tAccountTypeDWId as integer,\n\t\tAccountTypeId as integer,\n\t\tAccountType as string,\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['AccountTypeDWId'],\n\tformat: 'table',\n\tmapColumn(\n\t\tAccountTypeDWId = ExistingAccountTypeDWId,\n\t\tAccountType,\n\t\tDWRecordHash = SourceRecordHash,\n\t\tRecordLastUpdatedDate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> UpdateSink"
+		}
+	}
+}

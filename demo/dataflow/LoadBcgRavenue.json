@@ -1,0 +1,28 @@
+{
+	"name": "LoadBcgRavenue",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RevenueSrcView",
+						"type": "DatasetReference"
+					},
+					"name": "vRevenueSrc"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "BcgRavenuTbl",
+						"type": "DatasetReference"
+					},
+					"name": "BcgRevenue"
+				}
+			],
+			"transformations": [],
+			"script": "source(output(\n\t\tCustomerDWId as integer,\n\t\tRAVENUE_LAST_MONTH as decimal(38,2),\n\t\tRAVENUE_LAST_QUARTER as integer,\n\t\tRAVENUE_MTD as decimal(38,2),\n\t\tRAVENUE_YTD as decimal(38,2),\n\t\tRAVENUE_INCREASE_PCT_QnQ as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> vRevenueSrc\nvRevenueSrc sink(input(\n\t\tCustomerDWId as integer,\n\t\tRAVENUE_LAST_MONTH as decimal(38,2),\n\t\tRAVENUE_LAST_QUARTER as integer,\n\t\tRAVENUE_MTD as decimal(38,2),\n\t\tRAVENUE_YTD as decimal(38,2),\n\t\tRAVENUE_INCREASE_PCT_QnQ as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tpreSQLs:['truncate table model.BcgRavenue'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> BcgRevenue"
+		}
+	}
+}

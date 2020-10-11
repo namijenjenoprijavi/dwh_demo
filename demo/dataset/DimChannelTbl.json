@@ -1,0 +1,56 @@
+{
+	"name": "DimChannelTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ChannelDWId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ChannelId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ChannelType",
+				"type": "varchar"
+			},
+			{
+				"name": "DWRecordHash",
+				"type": "varchar"
+			},
+			{
+				"name": "DwEfectivStartDate",
+				"type": "date"
+			},
+			{
+				"name": "DwEfectivEndDate",
+				"type": "date"
+			},
+			{
+				"name": "DwIsCurrentFlag",
+				"type": "bit"
+			},
+			{
+				"name": "RecordCreatedDate",
+				"type": "date"
+			},
+			{
+				"name": "RecordLastUpdatedDate",
+				"type": "date"
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "DimChannel"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

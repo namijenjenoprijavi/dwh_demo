@@ -1,0 +1,47 @@
+{
+	"name": "FactTrafficTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "AccountDWId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "DateDwId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Ravenue",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "InteractionNo",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "RecordCreatedDate",
+				"type": "date"
+			},
+			{
+				"name": "RecordLastUpdatedDate",
+				"type": "date"
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "FactTraffic"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

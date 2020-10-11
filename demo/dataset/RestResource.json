@@ -1,0 +1,33 @@
+{
+	"name": "RestResource",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestConnection",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"access_key": {
+				"type": "string",
+				"defaultValue": "5d0c14696d280d380a52d51fba0830d1"
+			},
+			"symbols": {
+				"type": "string",
+				"defaultValue": "VG"
+			},
+			"date_from": {
+				"type": "string",
+				"defaultValue": "01-01-2020"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@{CONCAT('/v1/eod/?access_key=', dataset().access_key\n, '&symbols=', dataset().symbols, '&date_from=', dataset().date_from, '&limit=1000')}",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

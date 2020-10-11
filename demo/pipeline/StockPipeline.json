@@ -1,0 +1,114 @@
+{
+	"name": "StockPipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET"
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['high']"
+								},
+								"sink": {
+									"name": "StockHigh"
+								}
+							},
+							{
+								"source": {
+									"path": "['low']"
+								},
+								"sink": {
+									"name": "StockLow"
+								}
+							},
+							{
+								"source": {
+									"path": "['close']"
+								},
+								"sink": {
+									"name": "StockClose"
+								}
+							},
+							{
+								"source": {
+									"path": "['volume']"
+								},
+								"sink": {
+									"name": "StockVolume"
+								}
+							},
+							{
+								"source": {
+									"path": "['symbol']"
+								},
+								"sink": {
+									"name": "StockSymbol"
+								}
+							},
+							{
+								"source": {
+									"path": "['exchange']"
+								},
+								"sink": {
+									"name": "StockExchange"
+								}
+							},
+							{
+								"source": {
+									"path": "['date']"
+								},
+								"sink": {
+									"name": "StockDate"
+								}
+							}
+						],
+						"collectionReference": "$['data']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "RestResource",
+						"type": "DatasetReference",
+						"parameters": {
+							"access_key": "5d0c14696d280d380a52d51fba0830d1",
+							"symbols": "VG",
+							"date_from": "2018-01-01"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "StockData",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2020-10-11T17:29:41Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

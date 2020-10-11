@@ -1,0 +1,135 @@
+{
+	"name": "DimDateTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "DateDwId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FullDate",
+				"type": "smalldatetime",
+				"precision": 16,
+				"scale": 0
+			},
+			{
+				"name": "DayOfWeek",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "DayNumInMonth",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "DayNumOverall",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "DayName",
+				"type": "varchar"
+			},
+			{
+				"name": "DayAbrevv",
+				"type": "varchar"
+			},
+			{
+				"name": "WeekdayFlag",
+				"type": "varchar"
+			},
+			{
+				"name": "WeekNumInYear",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "WeekNumOverall",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "WeekBeginDate",
+				"type": "smalldatetime",
+				"precision": 16,
+				"scale": 0
+			},
+			{
+				"name": "WeekBeginDateKey",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "Month",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "MonthNumOverall",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "MonthName",
+				"type": "varchar"
+			},
+			{
+				"name": "MonthAbrevv",
+				"type": "varchar"
+			},
+			{
+				"name": "Quarter",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "Year",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "YearMonth",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FiscalMonth",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "FiscalQuarter",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "FiscalYear",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "LastDayInMonthFlag",
+				"type": "varchar"
+			},
+			{
+				"name": "SameDayYearAgoDate",
+				"type": "smalldatetime",
+				"precision": 16,
+				"scale": 0
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "DimDate"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

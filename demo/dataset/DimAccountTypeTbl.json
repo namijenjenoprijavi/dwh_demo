@@ -1,0 +1,56 @@
+{
+	"name": "DimAccountTypeTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "AccountTypeDWId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AccountTypeId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AccountType",
+				"type": "varchar"
+			},
+			{
+				"name": "DWRecordHash",
+				"type": "varchar"
+			},
+			{
+				"name": "DwEfectivStartDate",
+				"type": "date"
+			},
+			{
+				"name": "DwEfectivEndDate",
+				"type": "date"
+			},
+			{
+				"name": "DwIsCurrentFlag",
+				"type": "bit"
+			},
+			{
+				"name": "RecordCreatedDate",
+				"type": "date"
+			},
+			{
+				"name": "RecordLastUpdatedDate",
+				"type": "date"
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "DimAccountType"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,125 @@
+{
+	"name": "LoadDimAccount",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AccountTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimAccountSrc"
+				},
+				{
+					"dataset": {
+						"referenceName": "AccountTbl",
+						"type": "DatasetReference"
+					},
+					"name": "ExistingRecords"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimAccountTbl",
+						"type": "DatasetReference"
+					},
+					"name": "MaxAccountDWId"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimAccountTypeTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimAccountType"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimCustomerTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimCustomer"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimChannelTbl",
+						"type": "DatasetReference"
+					},
+					"name": "DimChannell"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DimAccountTbl",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "DimAccountTbl",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExistingRecordsz"
+				},
+				{
+					"name": "SourceHash"
+				},
+				{
+					"name": "Exists"
+				},
+				{
+					"name": "Lookup"
+				},
+				{
+					"name": "ConditionalSplit"
+				},
+				{
+					"name": "JoinMax"
+				},
+				{
+					"name": "SurrogateKey"
+				},
+				{
+					"name": "InsertDerivedColumn"
+				},
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "UpdateDerived"
+				},
+				{
+					"name": "UpdateAlterRow"
+				},
+				{
+					"name": "Lookup1"
+				},
+				{
+					"name": "Lookup2"
+				},
+				{
+					"name": "Lookup3"
+				},
+				{
+					"name": "Lookup4"
+				},
+				{
+					"name": "Lookup5"
+				},
+				{
+					"name": "Lookup6"
+				},
+				{
+					"name": "AlterRow1"
+				}
+			],
+			"script": "source(output(\n\t\tAccountId as integer,\n\t\tCustomerId as integer,\n\t\tChannelId as integer,\n\t\tAccountTypeId as integer,\n\t\tUnitPrice as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimAccountSrc\nsource(output(\n\t\tAccountDWId as integer,\n\t\tAccountId as integer,\n\t\tDWRecordHash as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: '\\nselect AccountDWId, AccountId, DWRecordHash from  Model.DimAccount\\n',\n\tformat: 'query') ~> ExistingRecords\nsource(output(\n\t\tMaxAccountDWId as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'SELECT MaxAccountDWId = isnull(max(AccountDWId),0) \\nFROM Model.DimAccount',\n\tformat: 'query') ~> MaxAccountDWId\nsource(output(\n\t\tAccountTypeDWId as integer,\n\t\tAccountTypeId as integer,\n\t\tAccountType as string,\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimAccountType\nsource(output(\n\t\tCustomerId as integer,\n\t\tCustomerDwId as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: '\\nSelect CustomerId, CustomerDwId \\nfrom model.DimCustomer where [DwIsCurrentFlag]=\\'1\\'',\n\tformat: 'query') ~> DimCustomer\nsource(output(\n\t\tChannelDWId as integer,\n\t\tChannelId as integer,\n\t\tChannelType as string,\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimChannell\nExistingRecords select(mapColumn(\n\t\tExistingAccountDWId = AccountDWId,\n\t\tExistingAccountId = AccountId,\n\t\tExistingDWRecordHash = DWRecordHash\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ExistingRecordsz\nDimAccountSrc derive(SourceRecordHash = sha2(256, AccountId, UnitPrice)) ~> SourceHash\nSourceHash, ExistingRecordsz exists(SourceRecordHash == ExistingDWRecordHash,\n\tnegate:true,\n\tbroadcast: 'auto')~> Exists\nExists, ExistingRecordsz lookup(AccountId == ExistingAccountDWId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup\nLookup split(isNull(ExistingAccountId),\n\tdisjoint: false) ~> ConditionalSplit@(NewItems, UpdatedItem)\nConditionalSplit@NewItems, MaxAccountDWId join(1==1,\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> JoinMax\nJoinMax keyGenerate(output(NewAccountDWId as long),\n\tstartAt: 1L) ~> SurrogateKey\nSurrogateKey derive(NewChannelDWId = NewAccountDWId + MaxAccountDWId,\n\t\tDWIsCurrent = toBoolean('1'),\n\t\tDwEfectivStartDate = currentUTC(),\n\t\tDwEfectivEndDate = toDate('2999-12-31'),\n\t\tRecordCreatedDate = currentUTC(),\n\t\tRecordLastUpdatedDate = currentUTC()) ~> InsertDerivedColumn\nLookup3 alterRow(insertIf(1==1)) ~> AlterRow\nConditionalSplit@UpdatedItem derive(RecordLastUpdatedDate = currentUTC()) ~> UpdateDerived\nUpdateDerived alterRow(updateIf(1==1)) ~> UpdateAlterRow\nInsertDerivedColumn, DimAccountType lookup(ConditionalSplit@NewItems@AccountTypeId == DimAccountType@AccountTypeId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup1\nLookup1, DimCustomer lookup(ConditionalSplit@NewItems@CustomerId == DimCustomer@CustomerId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup2\nLookup2, DimChannell lookup(ConditionalSplit@NewItems@ChannelId == DimChannell@ChannelId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup3\nUpdateAlterRow, DimAccountType lookup(ConditionalSplit@UpdatedItem@AccountTypeId == DimAccountType@AccountTypeId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup4\nLookup4, DimCustomer lookup(ConditionalSplit@UpdatedItem@CustomerId == DimCustomer@CustomerId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup5\nLookup5, DimChannell lookup(ConditionalSplit@UpdatedItem@ChannelId == DimChannell@ChannelId,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup6\nLookup6 alterRow(updateIf(1==1)) ~> AlterRow1\nAlterRow sink(input(\n\t\tAccountDWId as integer,\n\t\tAccountId as integer,\n\t\tChannelDWId as integer,\n\t\tAccountTypeDWId as integer,\n\t\tCustomerDWId as integer,\n\t\tUnitPrice as decimal(18,2),\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tAccountDWId = NewAccountDWId,\n\t\tAccountId,\n\t\tChannelDWId,\n\t\tAccountTypeDWId,\n\t\tCustomerDWId = CustomerDwId,\n\t\tUnitPrice,\n\t\tDWRecordHash = SourceRecordHash,\n\t\tDwEfectivStartDate = {InsertDerivedColumn@DwEfectivStartDate},\n\t\tDwEfectivEndDate = {InsertDerivedColumn@DwEfectivEndDate},\n\t\tDwIsCurrentFlag = DWIsCurrent,\n\t\tRecordCreatedDate = {InsertDerivedColumn@RecordCreatedDate},\n\t\tRecordLastUpdatedDate = {InsertDerivedColumn@RecordLastUpdatedDate}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1\nAlterRow1 sink(input(\n\t\tAccountDWId as integer,\n\t\tAccountId as integer,\n\t\tChannelDWId as integer,\n\t\tAccountTypeDWId as integer,\n\t\tCustomerDWId as integer,\n\t\tUnitPrice as decimal(18,2),\n\t\tDWRecordHash as string,\n\t\tDwEfectivStartDate as date,\n\t\tDwEfectivEndDate as date,\n\t\tDwIsCurrentFlag as boolean,\n\t\tRecordCreatedDate as date,\n\t\tRecordLastUpdatedDate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['AccountId'],\n\tformat: 'table',\n\tmapColumn(\n\t\tAccountId,\n\t\tChannelDWId,\n\t\tAccountTypeDWId,\n\t\tCustomerDWId = CustomerDwId,\n\t\tUnitPrice,\n\t\tDWRecordHash = SourceRecordHash,\n\t\tRecordLastUpdatedDate = {UpdateDerived@RecordLastUpdatedDate}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink2"
+		}
+	}
+}

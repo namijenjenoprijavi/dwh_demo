@@ -1,0 +1,43 @@
+{
+	"name": "WorkFlowPipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "StagePipline",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "StagePipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ModelPipline",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "StagePipline",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ModelPipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2020-10-11T17:06:29Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

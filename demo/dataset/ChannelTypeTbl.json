@@ -1,0 +1,27 @@
+{
+	"name": "ChannelTypeTbl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DwhDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ChannelId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ChannelType",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Stage",
+			"table": "ChannelType"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
